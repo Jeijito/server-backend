@@ -7,13 +7,13 @@
 #include <netinet/in.h>  //INTERNET PROTOCOL
 #include <unistd.h> //POSIX API
 		   
-
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //
-//socket() is a simple intger where 0 is the standard input, 1 is the standard output and 2 is the standard error. The next number in the Kernel is 3 so it would be 3.
+// socket() is a simple intger where 0 is the standard input, 1 is the standard output and 2 is the standard error. The next number in the Kernel is 3 so it would be 3.
 //
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //
-//socket() has 3 parameters:
+// socket() has 3 parameters:
 //	domain: The protocol family or network layer space the socket will use to communicate.
 //		AF_INET uses ipv4
 //		AFINET6 uses ipv6
@@ -36,13 +36,25 @@
 //
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //
-//port is 8080 becuase port 80 is the standard HTTP port and it is easier for testing
+// Port is 8080 becuase port 80 is the standard HTTP port and it is easier for testing
 //
-//other examples for port numbers could be 443 for HTTPS secure web traffic and port  22 SSH secure remove access
+// Other examples for port numbers could be 443 for HTTPS secure web traffic and port  22 SSH secure remove access
 //
-//Ports from 1 to 1023 are known as well-known Ports. Only User Admin can bind a socket to a port below 1024. If I use 80 as the port I would need to run it as sudo ./server 
-//
+// Ports from 1 to 1023 are known as well-known Ports. Only User Admin can bind a socket to a port below 1024. If I use 80 as the port I would need to run it as sudo ./server 
+// 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //
 
 
@@ -51,6 +63,8 @@ int main(){
 		      
 	server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	
+	struct sockaddr_in address;
+	int port = 8080;
 
 
 	if(server_fd < 0){
@@ -58,7 +72,20 @@ int main(){
 		exit(EXIT_FAILURE);
 	}
 
+
 	printf("Socket created FD ID: %d\n", server_fd);
+	
+	address.sin_family = AF_INET;	//pair address layout with the same as the socket
+	address.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY Tells the server to bind and listen to every network interface, local wifi, local loopback, etc
+	address.sin_port = htons(port);		//htons(port) converts the interget into a network byte order
+
+	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0){
+		perror("Bind operation failed");
+    		close(server_fd);
+    		exit(EXIT_FAILURE);
+	}
+
+	printf("Socket successfully bound to port %d!\n", port);
 
 	close(server_fd);
 	return 0;
