@@ -3,13 +3,14 @@
 #include <sys/socket.h>  // SOCKET API
 #include <netinet/in.h>  // INTERNET PROTOCOL
 #include <unistd.h>      // POSIX API
+#include "config.h"	// config for private stuff
 
 int main() {
     int server_fd; 
     int client_fd; // To store the dedicated client communication channel
     
     struct sockaddr_in address;
-    int port = 8080;
+    int port = SERVER_PORT;
 
     // 1. Create the master network socket (IPv4, TCP)
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
