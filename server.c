@@ -59,7 +59,11 @@ int main() {
     }
 
     printf("Connection accepted! Client connected via File Descriptor ID: %d\n", client_fd);
-            
+
+    //Temporary measure to keep the connection open
+    printf("Holding channel open for 2 seconds...\n");
+    sleep(2);
+
     // Allocate a small 1-byte buffer memory space to read the incoming command opcode
     unsigned char command_buffer;
     ssize_t bytes_read;
