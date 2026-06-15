@@ -1,93 +1,68 @@
-//first prototype for communcation between laptop and pc
-
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>  //SOCKET API
-#include <netinet/in.h>  //INTERNET PROTOCOL
-#include <unistd.h> //POSIX API
-		   
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-// socket() is a simple intger where 0 is the standard input, 1 is the standard output and 2 is the standard error. The next number in the Kernel is 3 so it would be 3.
-//
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-// socket() has 3 parameters:
-//	domain: The protocol family or network layer space the socket will use to communicate.
-//		AF_INET uses ipv4
-//		AFINET6 uses ipv6
-//		AF_UNIX or AF_LOCAL uses local IPs, same computer, cannot travel through WIFI
-//	type: The behavioral rules of the data stream
-//		SOCK_STREAM, fprces a quential error checked stream
-//		SOCKDGRAM forces a quick unverified stream used for videogames or VC like discord
-//			
-//	protocol: The precise transport-layer mathematical protocol to back the socket type.
-//		0 is Auto-matching which tells the kernel any type of socket is being used.
-//		6 requires to use SOCK_STREAM as the socket type, and forces TCP (transmission control protocol), which splits the data being sent into different pieces. 
-//		17 requires to use SOCK_DGRAM whic hises UDP which is used for streaming voice or video games
-//		132 requires to use SOCK_STREAM or SOCK_SEQPACKET which is used for advabced multistream data transport
-//		255 requires to use SOCK_RAW which is used for netowrk engineering, custom packets and sniffing
-//
-//
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------	
-//
-// struct sockaddr_in address is a built in structure to store IPv4 sockets.
-//
-//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-// Port is 8080 becuase port 80 is the standard HTTP port and it is easier for testing
-//
-// Other examples for port numbers could be 443 for HTTPS secure web traffic and port  22 SSH secure remove access
-//
-// Ports from 1 to 1023 are known as well-known Ports. Only User Admin can bind a socket to a port below 1024. If I use 80 as the port I would need to run it as sudo ./server 
-// 
-//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
+#include <sys/socket.h>  // SOCKET API
+#include <netinet/in.h>  // INTERNET PROTOCOL
+#include <unistd.h>      // POSIX API
 
+int main() {
+    int server_fd; 
+    int client_fd; // To store the dedicated client communication channel
+    
+    struct sockaddr_in address;
+    int port = 8080;
 
-int main(){
-	int server_fd; // stores operation
-		      
-	server_fd = socket(AF_INET, SOCK_STREAM, 0);
-	
-	struct sockaddr_in address;
-	int port = 8080;
+    // 1. Create the master network socket (IPv4, TCP)
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
+    if (server_fd < 0) {
+        perror("SOCKET CREATION FAILED");
+        exit(EXIT_FAILURE);
+    }
 
-	if(server_fd < 0){
-		perror("SOCKET CREATION FAILED");
-		exit(EXIT_FAILURE);
-	}
+    printf("Socket created FD ID: %d\n", server_fd);
 
+    // 2. Clear and format the address structure layout
+    address.sin_family = AF_INET;  
+    address.sin_addr.s_addr = INADDR_ANY;  
+    address.sin_port = htons(port);  
 
-	printf("Socket created FD ID: %d\n", server_fd);
-	
-	address.sin_family = AF_INET;	//pair address layout with the same as the socket
-	address.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY Tells the server to bind and listen to every network interface, local wifi, local loopback, etc
-	address.sin_port = htons(port);		//htons(port) converts the interget into a network byte order
+    // 3. Bind the socket to our physical interface and port
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("Bind operation failed");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
 
-	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0){
-		perror("Bind operation failed");
-    		close(server_fd);
-    		exit(EXIT_FAILURE);
-	}
+    printf("Socket successfully bound to port %d!\n", port);
 
-	printf("Socket successfully bound to port %d!\n", port);
+    // 4. Put the socket into listening mode with a backlog queue threshold of 3
+    if (listen(server_fd, 3) < 0) {
+        perror("Listen operation failed");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
 
-	close(server_fd);
-	return 0;
+    printf("Server is now actively listening on port %d... Waiting for connections...\n", port);
+
+    // 5. Instantiating memory spaces to hold incoming client identification metadata
+    struct sockaddr_in client_address;
+    socklen_t addrlen = sizeof(client_address);
+
+    // This call blocks execution until a client knocks on port 8080
+    client_fd = accept(server_fd, (struct sockaddr *)&client_address, &addrlen);
+
+    if (client_fd < 0) {
+        perror("Accept operation failed");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Connection accepted! Client connected via File Descriptor ID: %d\n", client_fd);
+
+    // 6. Orderly execution teardown (Close client connection, then release the master listener)
+    close(client_fd);
+    close(server_fd);
+    
+    printf("Server shut down cleanly.\n");
+    return 0;
 }
-	
