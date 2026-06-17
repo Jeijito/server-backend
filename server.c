@@ -4,6 +4,7 @@
 #include <netinet/in.h>  // INTERNET PROTOCOL
 #include <unistd.h>      // POSIX API
 #include "config.h"	// config for private stuff
+#include "upload.h"
 
 int main() {
     int server_fd; 
@@ -80,7 +81,7 @@ int main() {
         switch (command_buffer) {
             case 0x01:
                 printf("[PROTOCOL SUCCESS] Received Command 0x01: UPLOAD REQUEST triggered.\n");
-                // Future implementation: handle_upload(client_fd);
+                handle_upload(client_fd);
                 break;
             case 0x02:
                 printf("[PROTOCOL SUCCESS] Received Command 0x02: DOWNLOAD REQUEST triggered.\n");
